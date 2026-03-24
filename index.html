@@ -123,27 +123,19 @@
   }
   .hero-video-placeholder {
     position: absolute; inset: 0;
-    background: #0e0e0e;
     overflow: hidden; opacity: .55;
   }
   .hero-video-placeholder video {
-    position: absolute; inset: 0; width: 100%; height: 100%;
+    position: absolute; top: 50%; left: 50%;
+    min-width: 100%; min-height: 100%;
+    width: auto; height: auto;
+    transform: translate(-50%, -50%);
     object-fit: cover;
   }
   .hero-video-placeholder::before {
     content: ''; position: absolute; inset: 0; z-index: 1;
     background: linear-gradient(to top, rgba(11,11,11,.9) 0%, rgba(11,11,11,.3) 40%, rgba(11,11,11,.2) 100%);
   }
-  .play-btn {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2;
-    width: 72px; height: 72px; border-radius: 50%;
-    border: 1px solid rgba(236,232,225,.15);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all .4s var(--ease);
-    background: rgba(11,11,11,.4); backdrop-filter: blur(10px);
-  }
-  .play-btn:hover { border-color: var(--warm); transform: translate(-50%, -50%) scale(1.08); }
-  .play-btn svg { width: 20px; height: 20px; fill: var(--pearl); margin-left: 3px; }
 
   .hero-content { position: relative; z-index: 2; }
   .hero-tag {
@@ -583,9 +575,6 @@
       <video autoplay muted loop playsinline poster="assets/hero-poster.jpg">
         <source src="assets/hero-reel.mp4" type="video/mp4">
       </video>
-      <div class="play-btn">
-        <svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"/></svg>
-      </div>
     </div>
   </div>
   <div class="hero-content">
