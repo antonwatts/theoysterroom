@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Oyster Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0b0b0b;
+    --bg-elevated: #111111;
+    --pearl: #ece8e1;
+    --pearl-dim: #b5b0a7;
+    --warm: #c9b99a;
+    --warm-dim: rgba(201,185,154,.15);
+    --text: #e8e4dd;
+    --text-muted: #8a8580;
+    --serif: 'Cormorant Garamond', 'Georgia', serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  ::selection { background: rgba(201,185,154,.25); color: var(--pearl); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: rgba(201,185,154,.2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(201,185,154,.35); }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── LOADER ─── */
+  .loader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 24px;
+  }
+  .loader-text {
+    font-family: var(--serif); font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 300; letter-spacing: .08em; color: var(--pearl);
+    opacity: 0;
+  }
+  .loader-line {
+    width: 60px; height: 1px; background: var(--warm);
+    transform: scaleX(0); transform-origin: left;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; width: 100%; z-index: 500;
+    padding: 0 clamp(24px, 4vw, 56px);
+    height: 72px; display: flex; align-items: center; justify-content: space-between;
+    background: rgba(11,11,11,.6);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(201,185,154,.06);
+    transition: all .5s var(--ease);
+  }
+  nav.scrolled { height: 56px; background: rgba(11,11,11,.85); }
+  .nav-logo {
+    font-family: var(--serif); font-size: 1.1rem; font-weight: 400;
+    letter-spacing: .15em; text-transform: uppercase; color: var(--pearl);
+  }
+  .nav-logo i { font-style: italic; color: var(--warm); font-weight: 300; }
+  .nav-center { display: flex; gap: 40px; }
+  .nav-center a {
+    font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 400;
+    position: relative; transition: color .4s;
+  }
+  .nav-center a::after {
+    content: ''; position: absolute; bottom: -4px; left: 0;
+    width: 0; height: 1px; background: var(--warm);
+    transition: width .4s var(--ease);
+  }
+  .nav-center a:hover { color: var(--pearl); }
+  .nav-center a:hover::after { width: 100%; }
+  .nav-contact {
+    font-size: .68rem; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--pearl); font-weight: 400;
+    padding: 10px 28px; border: 1px solid rgba(201,185,154,.2);
+    transition: all .4s var(--ease); cursor: pointer;
+  }
+  .nav-contact:hover {
+    background: var(--warm); color: var(--bg);
+    border-color: var(--warm);
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative; min-height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 0 clamp(24px, 4vw, 56px) clamp(60px, 8vh, 100px);
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 60% 30%, rgba(201,185,154,.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 10% 70%, rgba(201,185,154,.03) 0%, transparent 50%),
+      var(--bg);
+  }
+  .hero-video-area {
+    position: absolute; inset: 0; z-index: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hero-video-placeholder {
+    width: min(70vw, 900px); height: min(45vw, 520px);
+    border: 1px solid rgba(201,185,154,.06);
+    background: linear-gradient(145deg, rgba(20,20,20,1) 0%, rgba(14,14,14,1) 100%);
+    position: relative; overflow: hidden; opacity: .6;
+  }
+  .hero-video-placeholder::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 40% 40%, rgba(201,185,154,.04), transparent 60%);
+  }
+  .play-btn {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 1px solid rgba(236,232,225,.15);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .4s var(--ease);
+    background: rgba(11,11,11,.4); backdrop-filter: blur(10px);
+  }
+  .play-btn:hover { border-color: var(--warm); transform: translate(-50%, -50%) scale(1.08); }
+  .play-btn svg { width: 20px; height: 20px; fill: var(--pearl); margin-left: 3px; }
+
+  .hero-content { position: relative; z-index: 2; }
+  .hero-tag {
+    font-size: .65rem; letter-spacing: .35em; text-transform: uppercase;
+    color: var(--warm); margin-bottom: 24px; font-weight: 500;
+    overflow: hidden;
+  }
+  .hero-tag span { display: inline-block; }
+  .hero-title {
+    font-family: var(--serif); font-weight: 300;
+    font-size: clamp(3.5rem, 9vw, 8rem); line-height: .95;
+    letter-spacing: -.02em; margin-bottom: 32px;
+    color: var(--pearl);
+  }
+  .hero-title em {
+    font-style: italic; font-weight: 300; color: var(--warm);
+  }
+  .hero-title .line { display: block; overflow: hidden; }
+  .hero-title .line-inner { display: inline-block; }
+  .hero-bottom {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-top: 40px;
+  }
+  .hero-sub {
+    font-size: .88rem; color: var(--text-muted); line-height: 1.75;
+    max-width: 380px; font-weight: 300;
+  }
+  .hero-scroll {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .hero-scroll span {
+    font-size: .6rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--text-muted); writing-mode: vertical-rl;
+  }
+  .hero-scroll-line {
+    width: 1px; height: 48px; background: linear-gradient(to bottom, var(--warm), transparent);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: .2; transform: scaleY(.5); }
+    50% { opacity: .7; transform: scaleY(1); }
+  }
+
+  /* ─── MARQUEE ─── */
+  .marquee-wrap {
+    border-top: 1px solid rgba(201,185,154,.06);
+    border-bottom: 1px solid rgba(201,185,154,.06);
+    padding: 20px 0; overflow: hidden;
+  }
+  .marquee {
+    display: flex; gap: 48px; white-space: nowrap;
+    animation: marqueeScroll 30s linear infinite;
+  }
+  .marquee span {
+    font-family: var(--serif); font-size: 1rem; font-weight: 300;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text-muted); opacity: .4;
+  }
+  .marquee .dot { color: var(--warm); opacity: .6; }
+  @keyframes marqueeScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ─── SECTION SHARED ─── */
+  .section-label {
+    font-size: .62rem; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--warm); font-weight: 500; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::before {
+    content: ''; width: 24px; height: 1px; background: var(--warm); opacity: .5;
+  }
+  .reveal { opacity: 0; transform: translateY(40px); }
+
+  /* ─── SERVICES ─── */
+  .services {
+    padding: clamp(80px, 12vh, 160px) clamp(24px, 4vw, 56px);
+  }
+  .services-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: clamp(60px, 8vh, 100px);
+    flex-wrap: wrap; gap: 32px;
+  }
+  .services-header h2 {
+    font-family: var(--serif); font-size: clamp(2.2rem, 5vw, 4.2rem);
+    font-weight: 300; line-height: 1.1;
+  }
+  .services-header h2 em { font-style: italic; color: var(--warm); }
+  .services-header p {
+    max-width: 340px; font-size: .85rem; color: var(--text-muted);
+    line-height: 1.75; font-weight: 300;
+  }
+  .services-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0; border-top: 1px solid rgba(201,185,154,.08);
+  }
+  .service-item {
+    padding: clamp(40px, 5vh, 64px) clamp(24px, 3vw, 48px);
+    border-bottom: 1px solid rgba(201,185,154,.08);
+    border-right: 1px solid rgba(201,185,154,.08);
+    position: relative; overflow: hidden;
+    transition: background .5s var(--ease);
+    cursor: default;
+  }
+  .service-item:nth-child(3n) { border-right: none; }
+  .service-item::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(201,185,154,.04), transparent 70%);
+    opacity: 0; transition: opacity .5s;
+  }
+  .service-item:hover::before { opacity: 1; }
+  .service-num {
+    font-family: var(--serif); font-size: 3.5rem; font-weight: 300;
+    color: rgba(201,185,154,.08); position: absolute;
+    top: 20px; right: 24px; line-height: 1;
+  }
+  .service-item h3 {
+    font-family: var(--serif); font-size: 1.8rem; font-weight: 300;
+    margin-bottom: 16px; position: relative;
+  }
+  .service-item p {
+    font-size: .82rem; color: var(--text-muted); line-height: 1.8;
+    font-weight: 300; max-width: 320px; position: relative;
+  }
+  .service-tags {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px;
+    position: relative;
+  }
+  .service-tags span {
+    font-size: .62rem; letter-spacing: .12em; text-transform: uppercase;
+    padding: 6px 14px; border: 1px solid rgba(201,185,154,.1);
+    color: var(--text-muted); font-weight: 400;
+  }
+
+  /* ─── WORK / EDITORIAL GRID ─── */
+  .work {
+    padding: clamp(80px, 12vh, 160px) clamp(24px, 4vw, 56px);
+  }
+  .work-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: clamp(60px, 8vh, 100px); flex-wrap: wrap; gap: 32px;
+  }
+  .work-header h2 {
+    font-family: var(--serif); font-size: clamp(2.2rem, 5vw, 4.2rem);
+    font-weight: 300; line-height: 1.1;
+  }
+  .work-header h2 em { font-style: italic; color: var(--warm); }
+  .work-view-all {
+    font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--text-muted); display: flex; align-items: center; gap: 10px;
+    transition: color .4s;
+  }
+  .work-view-all:hover { color: var(--pearl); }
+  .work-view-all svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; transition: transform .3s; }
+  .work-view-all:hover svg { transform: translateX(4px); }
+
+  .work-grid {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    grid-template-rows: auto auto;
+    gap: 20px;
+  }
+  .work-item {
+    position: relative; overflow: hidden;
+    background: var(--bg-elevated);
+    border: 1px solid rgba(201,185,154,.04);
+    cursor: pointer;
+    transition: border-color .4s;
+  }
+  .work-item:hover { border-color: rgba(201,185,154,.12); }
+  .work-item-1 { grid-row: span 2; }
+  .work-img {
+    width: 100%; height: 100%; min-height: 400px;
+    background: linear-gradient(145deg, #161616, #0e0e0e);
+    position: relative; overflow: hidden;
+    transition: transform .6s var(--ease);
+  }
+  .work-item:hover .work-img { transform: scale(1.03); }
+  .work-img::before {
+    content: ''; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to top, rgba(11,11,11,.85) 0%, transparent 50%);
+  }
+  .work-img-inner {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    opacity: .7; transition: opacity .5s;
+  }
+  .work-item:hover .work-img-inner { opacity: .9; }
+  /* Abstract color fills to simulate project imagery */
+  .work-item-1 .work-img-inner {
+    background: linear-gradient(135deg, #1a1520 0%, #0f1a1a 40%, #1a1510 100%);
+  }
+  .work-item-2 .work-img-inner {
+    background: linear-gradient(135deg, #1a1818 0%, #12100e 50%, #181515 100%);
+  }
+  .work-item-3 .work-img-inner {
+    background: linear-gradient(135deg, #15161a 0%, #0e1014 50%, #1a1815 100%);
+  }
+
+  .work-meta {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: clamp(24px, 3vw, 40px); z-index: 2;
+  }
+  .work-meta-tag {
+    font-size: .6rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--warm); margin-bottom: 10px; font-weight: 500;
+  }
+  .work-meta h3 {
+    font-family: var(--serif); font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+    font-weight: 300; line-height: 1.15; margin-bottom: 8px;
+  }
+  .work-meta p {
+    font-size: .78rem; color: var(--text-muted); font-weight: 300;
+    max-width: 360px; line-height: 1.6;
+  }
+
+  /* ─── EDITORIAL SPLIT (ABOUT) ─── */
+  .about-split {
+    display: grid; grid-template-columns: 1fr 1fr;
+    min-height: 90vh;
+    border-top: 1px solid rgba(201,185,154,.06);
+  }
+  .about-left {
+    position: relative; display: flex; align-items: center;
+    justify-content: center; overflow: hidden;
+    background: var(--bg-elevated);
+  }
+  .about-orb {
+    width: min(320px, 50vw); height: min(320px, 50vw);
+    border-radius: 50%; position: relative;
+    background: radial-gradient(circle at 35% 30%,
+      rgba(236,232,225,.07) 0%,
+      rgba(201,185,154,.03) 40%,
+      transparent 70%);
+    border: 1px solid rgba(201,185,154,.05);
+  }
+  .about-orb::before {
+    content: ''; position: absolute;
+    top: 15%; left: 15%; right: 15%; bottom: 15%;
+    border-radius: 50%;
+    border: 1px solid rgba(201,185,154,.04);
+    animation: orbFloat 10s ease-in-out infinite;
+  }
+  .about-orb::after {
+    content: ''; position: absolute;
+    top: 30%; left: 30%; right: 30%; bottom: 30%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,185,154,.06), transparent);
+    animation: orbFloat 10s ease-in-out infinite 2s;
+  }
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(8px, -12px) scale(1.02); }
+    66% { transform: translate(-6px, 8px) scale(.98); }
+  }
+  .about-right {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: clamp(48px, 6vw, 100px) clamp(36px, 5vw, 80px);
+  }
+  .about-right h2 {
+    font-family: var(--serif); font-size: clamp(2rem, 4vw, 3.4rem);
+    font-weight: 300; line-height: 1.1; margin-bottom: 28px;
+  }
+  .about-right h2 em { font-style: italic; color: var(--warm); }
+  .about-right p {
+    font-size: .88rem; color: var(--text-muted); line-height: 1.85;
+    font-weight: 300; max-width: 440px; margin-bottom: 16px;
+  }
+  .stats {
+    display: flex; gap: clamp(32px, 4vw, 56px); margin-top: 48px;
+    padding-top: 40px; border-top: 1px solid rgba(201,185,154,.08);
+  }
+  .stat-num {
+    font-family: var(--serif); font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 300; color: var(--pearl); line-height: 1; margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: .62rem; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 400;
+  }
+
+  /* ─── PHILOSOPHY STRIP ─── */
+  .philosophy {
+    padding: clamp(100px, 15vh, 200px) clamp(24px, 4vw, 56px);
+    text-align: center;
+    border-top: 1px solid rgba(201,185,154,.06);
+    position: relative;
+  }
+  .philosophy-glow {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,185,154,.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .philosophy blockquote {
+    font-family: var(--serif); font-size: clamp(1.8rem, 4vw, 3.2rem);
+    font-weight: 300; line-height: 1.25; max-width: 800px;
+    margin: 0 auto; position: relative; font-style: italic;
+    color: var(--pearl);
+  }
+  .philosophy .attrib {
+    margin-top: 32px; font-family: var(--sans);
+    font-size: .68rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 400;
+  }
+
+  /* ─── CLIENTS ─── */
+  .clients {
+    padding: 64px clamp(24px, 4vw, 56px);
+    border-top: 1px solid rgba(201,185,154,.06);
+    text-align: center;
+  }
+  .clients .section-label { justify-content: center; margin-bottom: 40px; }
+  .clients .section-label::before { display: none; }
+  .client-row {
+    display: flex; justify-content: center; align-items: center;
+    gap: clamp(36px, 5vw, 72px); flex-wrap: wrap;
+  }
+  .client-row span {
+    font-family: var(--sans); font-size: .78rem; font-weight: 500;
+    letter-spacing: .2em; text-transform: uppercase;
+    color: var(--pearl); opacity: .2;
+    transition: opacity .4s;
+  }
+  .client-row span:hover { opacity: .5; }
+
+  /* ─── CTA ─── */
+  .cta {
+    padding: clamp(120px, 18vh, 220px) clamp(24px, 4vw, 56px);
+    text-align: center; position: relative;
+    border-top: 1px solid rgba(201,185,154,.06);
+  }
+  .cta h2 {
+    font-family: var(--serif); font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 300; line-height: 1.05; margin-bottom: 24px;
+  }
+  .cta h2 em { font-style: italic; color: var(--warm); }
+  .cta p {
+    font-size: .88rem; color: var(--text-muted); font-weight: 300;
+    margin-bottom: 48px; max-width: 400px; margin-left: auto; margin-right: auto;
+    line-height: 1.7;
+  }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 14px;
+    padding: 18px 52px;
+    border: 1px solid rgba(201,185,154,.25);
+    font-size: .72rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--pearl); font-family: var(--sans); font-weight: 400;
+    transition: all .45s var(--ease); cursor: pointer;
+    background: transparent; position: relative; overflow: hidden;
+  }
+  .cta-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--warm); transform: scaleX(0);
+    transform-origin: left; transition: transform .45s var(--ease);
+  }
+  .cta-btn:hover::before { transform: scaleX(1); }
+  .cta-btn span { position: relative; z-index: 1; transition: color .45s; }
+  .cta-btn:hover span { color: var(--bg); }
+  .cta-btn svg {
+    width: 14px; height: 14px; stroke: currentColor; fill: none;
+    stroke-width: 1.5; position: relative; z-index: 1;
+    transition: transform .3s var(--ease), color .45s;
+  }
+  .cta-btn:hover svg { transform: translateX(4px); color: var(--bg); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 40px clamp(24px, 4vw, 56px);
+    border-top: 1px solid rgba(201,185,154,.06);
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 24px;
+  }
+  .footer-left {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .footer-left .nav-logo { font-size: .95rem; }
+  .footer-copy {
+    font-size: .65rem; color: var(--text-muted); font-weight: 300;
+    letter-spacing: .05em;
+  }
+  .footer-center {
+    font-size: .65rem; color: var(--text-muted); font-weight: 300;
+    letter-spacing: .08em;
+  }
+  .footer-right {
+    display: flex; gap: 28px; justify-self: end;
+  }
+  .footer-right a {
+    font-size: .65rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text-muted); transition: color .3s;
+  }
+  .footer-right a:hover { color: var(--pearl); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 960px) {
+    .nav-center { display: none; }
+    .services-grid { grid-template-columns: 1fr; }
+    .service-item { border-right: none !important; }
+    .work-grid { grid-template-columns: 1fr; }
+    .work-item-1 { grid-row: auto; }
+    .about-split { grid-template-columns: 1fr; }
+    .about-left { min-height: 50vh; }
+    footer { grid-template-columns: 1fr; text-align: center; gap: 16px; }
+    .footer-right { justify-self: center; }
+    .hero-bottom { flex-direction: column; gap: 32px; align-items: flex-start; }
+    .hero-scroll { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="loader">
+  <div class="loader-text">The Oyster Room</div>
+  <div class="loader-line"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">The Oyster <i>Room</i></div>
+  <div class="nav-center">
+    <a href="#work">Work</a>
+    <a href="#services">Services</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <a href="#contact" class="nav-contact">Let's Talk</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-video-area">
+    <div class="hero-video-placeholder">
+      <div class="play-btn">
+        <svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-tag"><span>Production</span> &nbsp;&middot;&nbsp; <span>Creative Direction</span> &nbsp;&middot;&nbsp; <span>AI / CGI / VFX</span></div>
+    <h1 class="hero-title">
+      <span class="line"><span class="line-inner">We craft worlds</span></span>
+      <span class="line"><span class="line-inner">that don't <em>exist yet</em></span></span>
+    </h1>
+    <div class="hero-bottom">
+      <p class="hero-sub">A creative studio at the intersection of human vision and machine imagination. Production, direction, and next-generation visual effects.</p>
+      <div class="hero-scroll">
+        <span>Scroll</span>
+        <div class="hero-scroll-line"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee">
+    <span>Film</span><span class="dot">&middot;</span>
+    <span>Commercial</span><span class="dot">&middot;</span>
+    <span>AI Generation</span><span class="dot">&middot;</span>
+    <span>CGI</span><span class="dot">&middot;</span>
+    <span>Visual Effects</span><span class="dot">&middot;</span>
+    <span>Creative Direction</span><span class="dot">&middot;</span>
+    <span>Motion Design</span><span class="dot">&middot;</span>
+    <span>Art Direction</span><span class="dot">&middot;</span>
+    <span>Film</span><span class="dot">&middot;</span>
+    <span>Commercial</span><span class="dot">&middot;</span>
+    <span>AI Generation</span><span class="dot">&middot;</span>
+    <span>CGI</span><span class="dot">&middot;</span>
+    <span>Visual Effects</span><span class="dot">&middot;</span>
+    <span>Creative Direction</span><span class="dot">&middot;</span>
+    <span>Motion Design</span><span class="dot">&middot;</span>
+    <span>Art Direction</span><span class="dot">&middot;</span>
+  </div>
+</div>
+
+<!-- WORK -->
+<section class="work" id="work">
+  <div class="work-header">
+    <div>
+      <div class="section-label">Selected Work</div>
+      <h2 class="reveal">Recent <em>projects</em></h2>
+    </div>
+    <a href="#" class="work-view-all reveal">
+      View all work
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+  <div class="work-grid">
+    <div class="work-item work-item-1 reveal">
+      <div class="work-img">
+        <div class="work-img-inner"></div>
+      </div>
+      <div class="work-meta">
+        <div class="work-meta-tag">AI &middot; CGI</div>
+        <h3>Ethereal Horizons</h3>
+        <p>Full CGI environment and AI-assisted character design for an immersive brand campaign.</p>
+      </div>
+    </div>
+    <div class="work-item work-item-2 reveal">
+      <div class="work-img">
+        <div class="work-img-inner"></div>
+      </div>
+      <div class="work-meta">
+        <div class="work-meta-tag">Production &middot; Direction</div>
+        <h3>Neon Pulse</h3>
+        <p>End-to-end production and creative direction for a global fashion launch.</p>
+      </div>
+    </div>
+    <div class="work-item work-item-3 reveal">
+      <div class="work-img">
+        <div class="work-img-inner"></div>
+      </div>
+      <div class="work-meta">
+        <div class="work-meta-tag">VFX &middot; Post</div>
+        <h3>Surface Tension</h3>
+        <p>Photorealistic fluid simulation and compositing for a luxury automotive spot.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="services-header">
+    <div>
+      <div class="section-label">What We Do</div>
+      <h2 class="reveal">Three disciplines,<br>one <em>vision</em></h2>
+    </div>
+    <p class="reveal">Every project begins with a question: what does this need to feel like? We build from there.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-item reveal">
+      <div class="service-num">01</div>
+      <h3>Production</h3>
+      <p>From concept to final delivery. We produce film, commercial, and digital content with the precision and taste of a world-class studio.</p>
+      <div class="service-tags">
+        <span>Film</span><span>Commercial</span><span>Digital</span><span>Live Action</span>
+      </div>
+    </div>
+    <div class="service-item reveal">
+      <div class="service-num">02</div>
+      <h3>Creative Direction</h3>
+      <p>Strategic visual storytelling that shapes brand worlds. We define the look, the tone, and the emotional architecture of every frame.</p>
+      <div class="service-tags">
+        <span>Art Direction</span><span>Brand</span><span>Narrative</span><span>Strategy</span>
+      </div>
+    </div>
+    <div class="service-item reveal">
+      <div class="service-num">03</div>
+      <h3>AI / CGI / VFX</h3>
+      <p>Next-generation visual effects powered by machine intelligence. Photorealistic CGI, generative design, and seamless compositing.</p>
+      <div class="service-tags">
+        <span>AI Generation</span><span>CGI</span><span>Compositing</span><span>Simulation</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about-split" id="about">
+  <div class="about-left">
+    <div class="about-orb"></div>
+  </div>
+  <div class="about-right">
+    <div class="section-label">About</div>
+    <h2 class="reveal">Built for the space between <em>art</em> and <em>machine</em></h2>
+    <p class="reveal">The Oyster Room is a creative studio for the new era. We bring together directors, designers, and technologists who believe the most powerful work lives at the edge of what's possible.</p>
+    <p class="reveal">From AI-driven workflows to handcrafted visual effects, every project is an opportunity to make something that hasn't existed before.</p>
+    <div class="stats reveal">
+      <div>
+        <div class="stat-num">150+</div>
+        <div class="stat-label">Projects</div>
+      </div>
+      <div>
+        <div class="stat-num">40+</div>
+        <div class="stat-label">Clients</div>
+      </div>
+      <div>
+        <div class="stat-num">12</div>
+        <div class="stat-label">Awards</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PHILOSOPHY -->
+<section class="philosophy">
+  <div class="philosophy-glow"></div>
+  <blockquote class="reveal">
+    "The pearl doesn't ask permission to form. It just responds to what's around it — and becomes something extraordinary."
+  </blockquote>
+  <div class="attrib reveal">— The Oyster Room</div>
+</section>
+
+<!-- CLIENTS -->
+<section class="clients">
+  <div class="section-label">Trusted By</div>
+  <div class="client-row">
+    <span>Nike</span>
+    <span>Apple</span>
+    <span>Netflix</span>
+    <span>Adidas</span>
+    <span>Sony</span>
+    <span>Gucci</span>
+    <span>BMW</span>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="contact">
+  <h2 class="reveal">Start something<br><em>extraordinary</em></h2>
+  <p class="reveal">Have a project in mind? We'd love to hear about it.</p>
+  <a href="mailto:hello@theoysterroom.com" class="cta-btn reveal">
+    <span>Get in Touch</span>
+    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <div class="nav-logo">The Oyster <i>Room</i></div>
+    <span class="footer-copy">&copy; 2026 The Oyster Room. All rights reserved.</span>
+  </div>
+  <div class="footer-center">London &middot; Los Angeles &middot; Sydney</div>
+  <div class="footer-right">
+    <a href="#">Instagram</a>
+    <a href="#">Vimeo</a>
+    <a href="#">LinkedIn</a>
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ── LOADER ── */
+  const tl = gsap.timeline();
+  tl.to('.loader-text', { opacity: 1, duration: .8, ease: 'power2.out' })
+    .to('.loader-line', { scaleX: 1, duration: 1, ease: 'power2.inOut' }, '-=.3')
+    .to('.loader', { yPercent: -100, duration: .8, ease: 'power3.inOut', delay: .3 })
+    .set('.loader', { display: 'none' });
+
+  /* ── NAV SCROLL ── */
+  ScrollTrigger.create({
+    start: 'top -80',
+    onUpdate: (self) => {
+      document.querySelector('nav').classList.toggle('scrolled', self.progress > 0);
+    }
+  });
+
+  /* ── HERO TEXT REVEAL ── */
+  gsap.from('.hero-tag span', {
+    yPercent: 100, opacity: 0, duration: 1, stagger: .12,
+    ease: 'power3.out', delay: 1.8
+  });
+  gsap.from('.hero-title .line-inner', {
+    yPercent: 110, duration: 1.2, stagger: .15,
+    ease: 'power3.out', delay: 2
+  });
+  gsap.from('.hero-sub', {
+    y: 30, opacity: 0, duration: 1, ease: 'power2.out', delay: 2.5
+  });
+  gsap.from('.hero-scroll', {
+    opacity: 0, duration: 1, ease: 'power2.out', delay: 2.8
+  });
+
+  /* ── HERO PARALLAX ── */
+  gsap.to('.hero-video-placeholder', {
+    yPercent: -15, ease: 'none',
+    scrollTrigger: {
+      trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true
+    }
+  });
+
+  /* ── REVEAL ANIMATIONS ── */
+  document.querySelectorAll('.reveal').forEach(el => {
+    gsap.to(el, {
+      opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+      scrollTrigger: {
+        trigger: el, start: 'top 85%', toggleActions: 'play none none none'
+      }
+    });
+  });
+
+  /* ── WORK ITEMS: CLIP-PATH REVEAL ── */
+  document.querySelectorAll('.work-item').forEach(item => {
+    gsap.from(item.querySelector('.work-img-inner'), {
+      scale: 1.15, duration: 1.5, ease: 'power2.out',
+      scrollTrigger: {
+        trigger: item, start: 'top 80%', toggleActions: 'play none none none'
+      }
+    });
+  });
+
+  /* ── SERVICE ITEMS STAGGER ── */
+  gsap.from('.service-item', {
+    opacity: 0, y: 40, duration: .8, stagger: .15, ease: 'power3.out',
+    scrollTrigger: {
+      trigger: '.services-grid', start: 'top 80%',
+      toggleActions: 'play none none none'
+    }
+  });
+
+  /* ── STATS COUNT-UP ── */
+  document.querySelectorAll('.stat-num').forEach(el => {
+    const target = parseInt(el.textContent);
+    const suffix = el.textContent.includes('+') ? '+' : '';
+    el.textContent = '0' + suffix;
+    ScrollTrigger.create({
+      trigger: el, start: 'top 85%',
+      onEnter: () => {
+        gsap.to({ val: 0 }, {
+          val: target, duration: 2, ease: 'power2.out',
+          onUpdate: function() { el.textContent = Math.round(this.targets()[0].val) + suffix; }
+        });
+      },
+      once: true
+    });
+  });
+
+  /* ── SMOOTH SCROLL VELOCITY SKEW ── */
+  let currentSkew = 0;
+  const skewTarget = document.querySelector('.work-grid');
+  if (skewTarget) {
+    ScrollTrigger.create({
+      onUpdate: (self) => {
+        const skew = Math.max(-2, Math.min(2, self.getVelocity() / 800));
+        if (Math.abs(skew) > Math.abs(currentSkew)) {
+          currentSkew = skew;
+          gsap.to(skewTarget, { skewY: skew, duration: .3, ease: 'power2.out' });
+          gsap.to(skewTarget, { skewY: 0, duration: .8, ease: 'power3.out', delay: .1 });
+        }
+      }
+    });
+  }
+});
+</script>
+
+</body>
+</html>
