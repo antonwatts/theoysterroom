@@ -54,15 +54,30 @@
     background: var(--bg);
     display: flex; align-items: center; justify-content: center;
     flex-direction: column; gap: 24px;
+    animation: loaderFadeOut .8s ease-in-out 2.5s forwards;
+  }
+  @keyframes loaderFadeOut {
+    0% { opacity: 1; pointer-events: all; }
+    100% { opacity: 0; pointer-events: none; display: none; }
   }
   .loader-text {
     font-family: var(--serif); font-size: clamp(2rem, 5vw, 4rem);
     font-weight: 300; letter-spacing: .08em; color: var(--pearl);
     opacity: 0;
+    animation: loaderTextIn .8s ease-out .3s forwards;
+  }
+  @keyframes loaderTextIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
   }
   .loader-line {
     width: 60px; height: 1px; background: var(--warm);
     transform: scaleX(0); transform-origin: left;
+    animation: loaderLineIn 1s ease-in-out .8s forwards;
+  }
+  @keyframes loaderLineIn {
+    0% { transform: scaleX(0); }
+    100% { transform: scaleX(1); }
   }
 
   /* ─── NAV ─── */
@@ -564,7 +579,7 @@
   <div class="hero-bg"></div>
   <div class="hero-video-area">
     <div class="hero-video-placeholder">
-      <video autoplay muted loop playsinline poster="assets/hero-poster.jpg">
+      <video autoplay muted loop playsinline preload="auto" poster="assets/hero-poster.jpg">
         <source src="assets/hero-reel.mp4" type="video/mp4">
       </video>
     </div>
@@ -782,6 +797,28 @@ document.addEventListener('DOMContentLoaded', () => {
     .to('.loader-line', { scaleX: 1, duration: 1, ease: 'power2.inOut' }, '-=.3')
     .to('.loader', { yPercent: -100, duration: .8, ease: 'power3.inOut', delay: .3 })
     .set('.loader', { display: 'none' });
+
+  /* ── LOADER SAFETY: CSS fallback ensures loader hides even if GSAP stalls ── */
+  setTimeout(() => {
+    const loader = document.querySelector('.loader');
+    if (loader && window.getComputedStyle(loader).display !== 'none') {
+      loader.style.transition = 'opacity .5s ease';
+      loader.style.opacity = '0';
+      loader.style.pointerEvents = 'none';
+      setTimeout(() => { loader.style.display = 'none'; }, 600);
+    }
+  }, 3500);
+
+  /* ── VIDEO AUTOPLAY FALLBACK ── */
+  document.querySelectorAll('video[autoplay]').forEach(v => {
+    v.play().catch(() => {});
+    v.addEventListener('canplay', () => { v.play().catch(() => {}); }, { once: true });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('video[autoplay]').forEach(v => {
+      if (v.paused) v.play().catch(() => {});
+    });
+  }, { once: true });
 
   /* ── NAV SCROLL ── */
   ScrollTrigger.create({
